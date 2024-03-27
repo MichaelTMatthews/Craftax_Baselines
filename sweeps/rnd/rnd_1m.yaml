@@ -1,0 +1,33 @@
+program: ppo_rnd.py
+entity: craftax
+project: rnd_1m
+method: random
+metric:
+  goal: maximize
+  name: episode_return
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - ${args_no_boolean_flags}
+parameters:
+  env_name:
+    value: "Craftax-Symbolic-v1"
+  total_timesteps:
+    value: 1000000
+  num_envs:
+    value: 256
+  num_minibatches:
+    value: 8
+  num_steps:
+    value: 16
+  rnd_output_size:
+    values: [4, 32, 256, 2048]
+  rnd_lr:
+    values: [0.00003, 0.0003, 0.003]
+  rnd_reward_coeff:
+    values: [0.01, 0.1, 1.0]
+  rnd_loss_coeff:
+    values: [0.0001, 0.001, 0.01]
+  rnd_gae_coeff:
+    values: [0.01, 0.1 ,1.0]
