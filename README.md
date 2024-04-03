@@ -1,3 +1,7 @@
+<p align="center">
+ <img width="80%" src="https://raw.githubusercontent.com/MichaelTMatthews/Craftax_Baselines/main/images/logo.png" />
+</p>
+
 # Craftax Baselines
 
 # Installation
