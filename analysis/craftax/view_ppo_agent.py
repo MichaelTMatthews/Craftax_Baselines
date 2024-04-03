@@ -1,4 +1,6 @@
+import argparse
 import os
+import sys
 
 import jax
 import jax.numpy as jnp
@@ -18,8 +20,9 @@ from models.actor_critic import ActorCriticConv, ActorCritic
 from craftax.craftax.play_craftax import CraftaxRenderer
 
 
-def main(path):
-    with open(os.path.join(path, "config.yaml")) as f:
+def main(args):
+
+    with open(os.path.join(args.path, "config.yaml")) as f:
         raw_config = yaml.load(f, Loader=yaml.Loader)
 
         config = {}
@@ -32,7 +35,7 @@ def main(path):
     orbax_checkpointer = PyTreeCheckpointer()
     options = CheckpointManagerOptions(max_to_keep=1, create=True)
     checkpoint_manager = CheckpointManager(
-        os.path.join(path, "policies"), orbax_checkpointer, options
+        os.path.join(args.path, "policies"), orbax_checkpointer, options
     )
 
     if config["ENV_NAME"] == "Craftax-Symbolic-v1":
@@ -67,7 +70,9 @@ def main(path):
         tx=tx,
     )
 
-    train_state = checkpoint_manager.restore(config["TOTAL_TIMESTEPS"], items=train_state)
+    train_state = checkpoint_manager.restore(
+        config["TOTAL_TIMESTEPS"], items=train_state
+    )
 
     obs, env_state = env.reset(key=__rng)
     done = 0
@@ -103,14 +108,18 @@ def print_new_achievements(old_achievements, new_achievements):
 
 
 if __name__ == "__main__":
-    checkpoint = (
-        "/home/mans4835/PycharmProjects/Craftax_Baselines/wandb/run-20240329_115225-dlk3gdfi/files"
-    )
+    checkpoint = "/home/mans4835/PycharmProjects/Craftax_Baselines/wandb/run-20240329_115225-dlk3gdfi/files"
 
-    debug = False
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path", type=str)
+    parser.add_argument("--debug", action="store_true")
 
-    if debug:
+    args, rest_args = parser.parse_known_args(sys.argv[1:])
+    if rest_args:
+        raise ValueError(f"Unknown args {rest_args}")
+
+    if args.debug:
         with jax.disable_jit():
-            main(checkpoint)
+            main(args)
     else:
-        main(checkpoint)
+        main(args)
