@@ -14,10 +14,9 @@ from orbax.checkpoint import (
     CheckpointManagerOptions,
     CheckpointManager,
 )
+import orbax.checkpoint as ocp
 
-from craftax.craftax.constants import Action, Achievement
 from models.actor_critic import ActorCriticConv, ActorCritic
-from craftax.craftax.play_craftax import CraftaxRenderer
 
 
 def main(args):
@@ -38,16 +37,40 @@ def main(args):
         os.path.join(args.path, "policies"), orbax_checkpointer, options
     )
 
+    is_classic = False
+
     if config["ENV_NAME"] == "Craftax-Symbolic-v1":
         from craftax.craftax.envs.craftax_symbolic_env import CraftaxSymbolicEnv
+        from craftax.craftax.constants import Action
 
         env = CraftaxSymbolicEnv(CraftaxSymbolicEnv.default_static_params())
         network = ActorCritic(len(Action), config["LAYER_SIZE"])
     elif config["ENV_NAME"] == "Craftax-Pixels-v1":
         from craftax.craftax.envs.craftax_pixels_env import CraftaxPixelsEnv
+        from craftax.craftax.constants import Action
 
         env = CraftaxPixelsEnv(CraftaxPixelsEnv.default_static_params())
         network = ActorCriticConv(len(Action), config["LAYER_SIZE"])
+    elif config["ENV_NAME"] == "Craftax-Classic-Symbolic-v1":
+        from craftax.craftax_classic.envs.craftax_symbolic_env import (
+            CraftaxClassicSymbolicEnv,
+        )
+        from craftax.craftax_classic.constants import Action
+
+        env = CraftaxClassicSymbolicEnv(
+            CraftaxClassicSymbolicEnv.default_static_params()
+        )
+        network = ActorCritic(len(Action), config["LAYER_SIZE"])
+        is_classic = True
+    elif config["ENV_NAME"] == "Craftax-Classic-Pixels-v1":
+        from craftax.craftax_classic.envs.craftax_pixels_env import (
+            CraftaxClassicPixelsEnv,
+        )
+        from craftax.craftax_classic.constants import Action
+
+        env = CraftaxClassicPixelsEnv(CraftaxClassicPixelsEnv.default_static_params())
+        network = ActorCriticConv(len(Action), config["LAYER_SIZE"])
+        is_classic = True
     else:
         raise ValueError(f"Unknown env: {config['ENV_NAME']}")
 
@@ -77,6 +100,13 @@ def main(args):
     obs, env_state = env.reset(key=__rng)
     done = 0
 
+    if is_classic:
+        from craftax.craftax_classic.play_craftax_classic import CraftaxRenderer
+        from craftax.craftax_classic.constants import Achievement
+    else:
+        from craftax.craftax.play_craftax import CraftaxRenderer
+        from craftax.craftax.constants import Achievement
+
     renderer = CraftaxRenderer(env, env_params, pixel_render_size=1)
 
     while not renderer.is_quit_requested():
@@ -95,21 +125,19 @@ def main(args):
                 _rng, env_state, action, env_params
             )
             new_achievements = env_state.achievements
-            print_new_achievements(old_achievements, new_achievements)
+            print_new_achievements(Achievement, old_achievements, new_achievements)
             if done:
                 print("\n")
         renderer.render(env_state)
 
 
-def print_new_achievements(old_achievements, new_achievements):
+def print_new_achievements(achievements_cls, old_achievements, new_achievements):
     for i in range(len(old_achievements)):
         if old_achievements[i] == 0 and new_achievements[i] == 1:
-            print(f"{Achievement(i).name} ({new_achievements.sum()}/{22})")
+            print(f"{achievements_cls(i).name} ({new_achievements.sum()}/{22})")
 
 
 if __name__ == "__main__":
-    checkpoint = "/home/mans4835/PycharmProjects/Craftax_Baselines/wandb/run-20240329_115225-dlk3gdfi/files"
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str)
     parser.add_argument("--debug", action="store_true")

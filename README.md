@@ -5,7 +5,7 @@
 # Craftax Baselines
 
 This repository contains the code for running the baselines from the [Craftax paper](https://arxiv.org/abs/2402.16801).
-For packaging reasons, this is separate to the [main Craftax repository](https://github.com/MichaelTMatthews/Craftax_Baselines/).
+For packaging reasons, this is separate to the [main repository](https://github.com/MichaelTMatthews/Craftax_Baselines/).
 
 # Installation
 ```commandline
@@ -43,4 +43,4 @@ python ppo_rnd.py
 ```
 
 # Visualisation
-You can save trained policies with the `--save_policy` flag.  These can then
+You can save trained policies with the `--save_policy` flag.  These can then be viewed with the `view_ppo_agent` scripts.

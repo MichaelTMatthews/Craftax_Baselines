@@ -258,7 +258,9 @@ def make_train(config):
                     latent_next_obs_pred = ex_state["icm_forward"].apply_fn(
                         ex_state["icm_forward"].params, latent_obs, action
                     )
-                    error = (latent_next_obs - latent_next_obs_pred) * done[:, None]
+                    error = (latent_next_obs - latent_next_obs_pred) * (
+                        1 - done[:, None]
+                    )
                     mse = jnp.square(error).mean(axis=-1)
 
                     reward_i = mse * config["ICM_REWARD_COEFF"]
@@ -493,7 +495,7 @@ def make_train(config):
                             jnp.sum(
                                 action_pred_logits
                                 * true_action
-                                * traj_batch.done[:, None],
+                                * (1 - traj_batch.done[:, None]),
                                 axis=1,
                             )
                         )
@@ -533,9 +535,9 @@ def make_train(config):
                             icm_forward_params, latent_obs, traj_batch.action
                         )
 
-                        error = (
-                            latent_next_obs - latent_next_obs_pred
-                        ) * traj_batch.done[:, None]
+                        error = (latent_next_obs - latent_next_obs_pred) * (
+                            1 - traj_batch.done[:, None]
+                        )
                         return (
                             jnp.square(error).mean() * config["ICM_FORWARD_LOSS_COEF"]
                         )
@@ -659,24 +661,8 @@ def run_ppo(config):
     t1 = time.time()
     print("Time to run experiment", t1 - t0)
     print("SPS: ", config["TOTAL_TIMESTEPS"] / (t1 - t0))
-    # t1 = time.time()
-    # out = train_vmap(rngs)
-    # t2 = time.time()
-    # print("t2", t2 - t1)
-    # print("SPS2: ", config["TOTAL_TIMESTEPS"] / (t2 - t1))
 
     if config["USE_WANDB"]:
-        # if config["DEBUG"] == "end":
-        #     info = out["info"]
-        #     for update in range(info["timestep"].shape[1]):
-        #         if update % 10 == 0:
-        #             for repeat in range(info["timestep"].shape[0]):
-        #                 update_info = jax.tree_map(lambda x: x[repeat, update], info)
-        #                 to_log = create_log_dict(update_info)
-        #                 batch_log(update, to_log, config)
-        #
-        #     t2 = time.time()
-        #     print("Time to log to wandb", t2 - t1)
 
         def _save_network(rs_index, dir_name):
             train_states = out["runner_state"][rs_index]
