@@ -43,4 +43,4 @@ python ppo_rnd.py
 ```
 
 # Visualisation
-You can save trained policies with the `--save_policy` flag.  These can then be viewed with the `view_ppo_agent` scripts.
+You can save trained policies with the `--save_policy` flag.  These can then be viewed with the `view_ppo_agent` script (pass in the path up to the `files` directory).
