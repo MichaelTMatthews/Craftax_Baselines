@@ -22,6 +22,7 @@ from logz.batch_logging import batch_log, create_log_dict
 from models.actor_critic import (
     ActorCritic,
     ActorCriticConv,
+    ActorCriticConvSymbolicCraftax,
 )
 from models.icm import ICMEncoder, ICMForward, ICMInverse
 from craftax.environment_base.wrappers import (
@@ -103,7 +104,16 @@ def make_train(config):
     def train(rng):
         # INIT NETWORK
         if is_symbolic:
-            network = ActorCritic(env.action_space(env_params).n, config["LAYER_SIZE"])
+            if config["USE_SYMBOLIC_CNN"]:
+                network = ActorCriticConvSymbolicCraftax(
+                    env.action_space(env_params).n,
+                    env.get_map_obs_shape(),
+                    config["LAYER_SIZE"],
+                )
+            else:
+                network = ActorCritic(
+                    env.action_space(env_params).n, config["LAYER_SIZE"]
+                )
         else:
             network = ActorCriticConv(
                 env.action_space(env_params).n, config["LAYER_SIZE"]
@@ -723,6 +733,7 @@ if __name__ == "__main__":
         "--use_optimistic_resets", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument("--optimistic_reset_ratio", type=int, default=16)
+    parser.add_argument("--use_symbolic_cnn", action="store_true")
 
     # EXPLORATION
     parser.add_argument("--exploration_update_epochs", type=int, default=4)

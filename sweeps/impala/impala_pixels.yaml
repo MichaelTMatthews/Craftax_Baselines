@@ -1,0 +1,19 @@
+program: ppo.py
+entity: michael-matthews
+project: craftax
+method: grid
+metric:
+  goal: maximize
+  name: episode_return
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - ${args_no_boolean_flags}
+parameters:
+  env_name:
+    value: "Craftax-Pixels-v1"
+  total_timesteps:
+    value: 1000000000
+  seed:
+    values: [0, 1, 2, 3, 4]

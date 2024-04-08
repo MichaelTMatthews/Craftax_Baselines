@@ -25,16 +25,12 @@ class ActorCriticConvSymbolicCraftax(nn.Module):
         flat_obs = obs[:, flat_map_obs_shape:]
 
         # Convolutions on map
-        image_embedding = nn.Conv(features=32, kernel_size=(2, 2))(image_obs)
-        image_embedding = nn.relu(image_embedding)
-        image_embedding = nn.max_pool(
-            image_embedding, window_shape=(2, 2), strides=(1, 1)
+        image_embedding = nn.Conv(features=32, kernel_size=(4, 4), strides=(2, 2))(
+            image_obs
         )
+        image_embedding = nn.relu(image_embedding)
         image_embedding = nn.Conv(features=32, kernel_size=(2, 2))(image_embedding)
         image_embedding = nn.relu(image_embedding)
-        image_embedding = nn.max_pool(
-            image_embedding, window_shape=(2, 2), strides=(1, 1)
-        )
         image_embedding = image_embedding.reshape(image_embedding.shape[0], -1)
         # image_embedding = jnp.concatenate([image_embedding, obs[:, : CraftaxEnv.get_flat_map_obs_shape()]], axis=-1)
 
