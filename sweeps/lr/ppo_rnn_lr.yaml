@@ -1,0 +1,23 @@
+program: ppo_rnn.py
+entity: michael-matthews
+project: craftax_rnn_1b_lr
+method: grid
+metric:
+  goal: maximize
+  name: episode_return
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - ${args_no_boolean_flags}
+parameters:
+  env_name:
+    value: "Craftax-Symbolic-v1"
+  total_timesteps:
+    value: 1000000000
+  seed:
+    values: [1337, 1338, 1339]
+  lr:
+    values: [3e-4, 1e-4, 5e-5, 1e-5, 5e-6, 1e-6, 5e-7, 1e-7]
+  no-anneal_lr:
+    value: true

@@ -87,15 +87,20 @@ class ActorCriticConv(nn.Module):
 
     @nn.compact
     def __call__(self, obs):
-        x = nn.Conv(features=32, kernel_size=(5, 5))(obs)
+        x = nn.Conv(features=16, kernel_size=(8, 8), strides=(4, 4))(obs)
         x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
-        x = nn.Conv(features=32, kernel_size=(5, 5))(x)
+        x = nn.Conv(features=32, kernel_size=(4, 4), strides=(2, 2))(x)
         x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
-        x = nn.Conv(features=32, kernel_size=(5, 5))(x)
-        x = nn.relu(x)
-        x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
+
+        # x = nn.Conv(features=32, kernel_size=(5, 5))(obs)
+        # x = nn.relu(x)
+        # x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
+        # x = nn.Conv(features=32, kernel_size=(5, 5))(x)
+        # x = nn.relu(x)
+        # x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
+        # x = nn.Conv(features=32, kernel_size=(5, 5))(x)
+        # x = nn.relu(x)
+        # x = nn.max_pool(x, window_shape=(3, 3), strides=(3, 3))
 
         embedding = x.reshape(x.shape[0], -1)
 
