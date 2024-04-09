@@ -88,7 +88,7 @@ def make_train(config):
         )
     else:
         if config["USE_FIXED_SEED"]:
-            env = FixedSeedAutoResetEnvWrapper(env)
+            env = FixedSeedAutoResetEnvWrapper(env, jax.random.PRNGKey(0))
         else:
             env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
