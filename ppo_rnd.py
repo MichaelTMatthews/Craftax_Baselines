@@ -24,6 +24,7 @@ from craftax.environment_base.wrappers import (
     OptimisticResetVecEnvWrapper,
     AutoResetEnvWrapper,
     BatchEnvWrapper,
+    FixedSeedAutoResetEnvWrapper,
 )
 from models.rnd import RNDNetwork, ActorCriticRND
 
@@ -86,7 +87,10 @@ def make_train(config):
             reset_ratio=min(config["OPTIMISTIC_RESET_RATIO"], config["NUM_ENVS"]),
         )
     else:
-        env = AutoResetEnvWrapper(env)
+        if config["USE_FIXED_SEED"]:
+            env = FixedSeedAutoResetEnvWrapper(env)
+        else:
+            env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
 
     def linear_schedule(count):
@@ -672,6 +676,7 @@ if __name__ == "__main__":
         "--use_optimistic_resets", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument("--optimistic_reset_ratio", type=int, default=16)
+    parser.add_argument("--use_fixed_seed", action="store_true")
 
     # EXPLORATION
     parser.add_argument("--exploration_update_epochs", type=int, default=1)

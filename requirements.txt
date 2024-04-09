@@ -13,4 +13,4 @@ gymnax
 chex
 matplotlib
 imageio
-craftax
+git+https://github.com/MichaelTMatthews/Craftax.git@fixed-seed

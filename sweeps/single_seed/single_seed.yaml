@@ -1,4 +1,4 @@
-program: ppo.py
+program: ppo_rnn.py
 entity: michael-matthews
 project: craftax
 method: grid
@@ -16,6 +16,4 @@ parameters:
   total_timesteps:
     value: 1000000000
   seed:
-    values: [0, 1, 2, 3, 4]
-  use_symbolic_cnn:
-    value: true
+    values: [0, 1, 2]
