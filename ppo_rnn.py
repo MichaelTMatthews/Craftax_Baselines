@@ -32,6 +32,9 @@ from logz.batch_logging import create_log_dict, batch_log
 
 from craftax.craftax_env import make_craftax_env_from_name
 
+# Code adapted from the original implementation made by Chris Lu
+# Original code located at https://github.com/luchris429/purejaxrl
+
 
 class ScannedRNN(nn.Module):
     @functools.partial(

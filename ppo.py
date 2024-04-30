@@ -32,6 +32,9 @@ from wrappers import (
     BatchEnvWrapper,
 )
 
+# Code adapted from the original implementation made by Chris Lu
+# Original code located at https://github.com/luchris429/purejaxrl
+
 
 class Transition(NamedTuple):
     done: jnp.ndarray
