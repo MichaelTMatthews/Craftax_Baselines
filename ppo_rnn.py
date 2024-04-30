@@ -23,10 +23,9 @@ from flax.training.train_state import TrainState
 import distrax
 import functools
 
-from craftax.environment_base.wrappers import (
+from wrappers import (
     LogWrapper,
     OptimisticResetVecEnvWrapper,
-    AutoResetEnvWrapper,
     BatchEnvWrapper,
 )
 from logz.batch_logging import create_log_dict, batch_log
