@@ -14,19 +14,13 @@ def create_log_dict(info, config):
         "episode_length": info["returned_episode_lengths"],
     }
 
-    if "Craftax" in config["ENV_NAME"]:
-        to_log["score"] = info["score"]
+    sum_achievements = 0
+    for k, v in info.items():
+        if "achievements" in k.lower():
+            to_log[k] = v
+            sum_achievements += v / 100.0
 
-        sum_achievements = 0
-        for k, v in info.items():
-            if "achievements" in k.lower():
-                to_log[k] = v
-                sum_achievements += v / 100.0
-
-        to_log["achievements"] = sum_achievements
-
-    elif "Tech-Tree" in config["ENV_NAME"]:
-        to_log["completed_techs"] = info["completed_techs"]
+    to_log["achievements"] = sum_achievements
 
     if config.get("TRAIN_ICM") or config.get("USE_RND"):
         to_log["intrinsic_reward"] = info["reward_i"]
@@ -64,19 +58,12 @@ def batch_log(update_step, log, config):
                 if key in [
                     "episode_length",
                     "episode_return",
-                    "wm_loss",
                     "exploration_bonus",
                     "e_mean",
                     "e_std",
-                    "goal_x",
-                    "goal_y",
                     "rnd_loss",
                 ]:
                     agg_logs[key] = np.mean(agg)
-                elif key in ["goal_heatmap"]:
-                    agg_logs[key] = wandb.Image(
-                        np.array(agg[0]), caption="Goal Heatmap"
-                    )
                 else:
                     agg_logs[key] = np.array(agg)
 
