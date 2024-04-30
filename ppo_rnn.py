@@ -355,11 +355,11 @@ def make_train(config):
                 permutation = jax.random.permutation(_rng, config["NUM_ENVS"])
                 batch = (init_hstate, traj_batch, advantages, targets)
 
-                shuffled_batch = jax.tree_util.tree_map(
+                shuffled_batch = jax.tree.map(
                     lambda x: jnp.take(x, permutation, axis=1), batch
                 )
 
-                minibatches = jax.tree_util.tree_map(
+                minibatches = jax.tree.map(
                     lambda x: jnp.swapaxes(
                         jnp.reshape(
                             x,
@@ -398,7 +398,7 @@ def make_train(config):
                 _update_epoch, update_state, None, config["UPDATE_EPOCHS"]
             )
             train_state = update_state[0]
-            metric = jax.tree_map(
+            metric = jax.tree.map(
                 lambda x: (x * traj_batch.info["returned_episode"]).sum()
                 / traj_batch.info["returned_episode"].sum(),
                 traj_batch.info,
@@ -471,7 +471,7 @@ def run_ppo(config):
 
         def _save_network(rs_index, dir_name):
             train_states = out["runner_state"][rs_index]
-            train_state = jax.tree_map(lambda x: x[0], train_states)
+            train_state = jax.tree.map(lambda x: x[0], train_states)
             orbax_checkpointer = PyTreeCheckpointer()
             options = CheckpointManagerOptions(max_to_keep=1, create=True)
             path = os.path.join(wandb.run.dir, dir_name)

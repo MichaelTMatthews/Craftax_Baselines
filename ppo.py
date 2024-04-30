@@ -406,13 +406,13 @@ def make_train(config):
                 ), "batch size must be equal to number of steps * number of envs"
                 permutation = jax.random.permutation(_rng, batch_size)
                 batch = (traj_batch, advantages, targets)
-                batch = jax.tree_util.tree_map(
+                batch = jax.tree.map(
                     lambda x: x.reshape((batch_size,) + x.shape[2:]), batch
                 )
-                shuffled_batch = jax.tree_util.tree_map(
+                shuffled_batch = jax.tree.map(
                     lambda x: jnp.take(x, permutation, axis=0), batch
                 )
-                minibatches = jax.tree_util.tree_map(
+                minibatches = jax.tree.map(
                     lambda x: jnp.reshape(
                         x, [config["NUM_MINIBATCHES"], -1] + list(x.shape[1:])
                     ),
@@ -442,7 +442,7 @@ def make_train(config):
             )
 
             train_state = update_state[0]
-            metric = jax.tree_map(
+            metric = jax.tree.map(
                 lambda x: (x * traj_batch.info["returned_episode"]).sum()
                 / traj_batch.info["returned_episode"].sum(),
                 traj_batch.info,
@@ -541,13 +541,13 @@ def make_train(config):
                     batch_size == config["NUM_STEPS"] * config["NUM_ENVS"]
                 ), "batch size must be equal to number of steps * number of envs"
                 permutation = jax.random.permutation(_rng, batch_size)
-                batch = jax.tree_util.tree_map(
+                batch = jax.tree.map(
                     lambda x: x.reshape((batch_size,) + x.shape[2:]), traj_batch
                 )
-                shuffled_batch = jax.tree_util.tree_map(
+                shuffled_batch = jax.tree.map(
                     lambda x: jnp.take(x, permutation, axis=0), batch
                 )
-                minibatches = jax.tree_util.tree_map(
+                minibatches = jax.tree.map(
                     lambda x: jnp.reshape(
                         x, [config["NUM_MINIBATCHES"], -1] + list(x.shape[1:])
                     ),
@@ -645,7 +645,7 @@ def run_ppo(config):
 
         def _save_network(rs_index, dir_name):
             train_states = out["runner_state"][rs_index]
-            train_state = jax.tree_map(lambda x: x[0], train_states)
+            train_state = jax.tree.map(lambda x: x[0], train_states)
             orbax_checkpointer = PyTreeCheckpointer()
             options = CheckpointManagerOptions(max_to_keep=1, create=True)
             path = os.path.join(wandb.run.dir, dir_name)
