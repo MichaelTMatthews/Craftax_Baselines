@@ -5,7 +5,7 @@
 # Craftax Baselines
 
 This repository contains the code for running the baselines from the [Craftax paper](https://arxiv.org/abs/2402.16801).
-For packaging reasons, this is separate to the [main repository](https://github.com/MichaelTMatthews/Craftax_Baselines/).
+For packaging reasons, this is separate to the [main repository](https://github.com/MichaelTMatthews/Craftax/).
 
 # Installation
 ```commandline
