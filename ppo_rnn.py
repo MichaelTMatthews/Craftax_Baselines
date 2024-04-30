@@ -31,6 +31,8 @@ from craftax.environment_base.wrappers import (
 )
 from logz.batch_logging import create_log_dict, batch_log
 
+from craftax.craftax_env import make_craftax_env_from_name
+
 
 class ScannedRNN(nn.Module):
     @functools.partial(
@@ -132,35 +134,16 @@ def make_train(config):
         config["NUM_ENVS"] * config["NUM_STEPS"] // config["NUM_MINIBATCHES"]
     )
 
-    if config["ENV_NAME"] == "Craftax-Classic-Symbolic-v1":
-        from craftax.craftax_classic.envs.craftax_symbolic_env import (
-            CraftaxClassicSymbolicEnv,
-        )
-
-        env = CraftaxClassicSymbolicEnv()
-        is_symbolic = True
-    elif config["ENV_NAME"] == "Craftax-Classic-Pixels-v1":
-        from craftax.craftax_classic.envs.craftax_pixels_env import (
-            CraftaxClassicPixelsEnv,
-        )
-
-        env = CraftaxClassicPixelsEnv()
-        is_symbolic = False
-    elif config["ENV_NAME"] == "Craftax-Symbolic-v1":
-        from craftax.craftax.envs.craftax_symbolic_env import CraftaxSymbolicEnv
-
-        env = CraftaxSymbolicEnv()
-        is_symbolic = True
-    elif config["ENV_NAME"] == "Craftax-Pixels-v1":
-        from craftax.craftax.envs.craftax_pixels_env import CraftaxPixelsEnv
-
-        env = CraftaxPixelsEnv()
-        is_symbolic = False
-    else:
-        raise ValueError(f"Unknown env: {config['ENV_NAME']}")
+    # Create environment
+    env = make_craftax_env_from_name(
+        config["ENV_NAME"], not config["USE_OPTIMISTIC_RESETS"]
+    )
     env_params = env.default_params
 
+    # Wrap with some extra logging
     env = LogWrapper(env)
+
+    # Wrap with a batcher, maybe using optimistic resets
     if config["USE_OPTIMISTIC_RESETS"]:
         env = OptimisticResetVecEnvWrapper(
             env,
@@ -168,7 +151,6 @@ def make_train(config):
             reset_ratio=min(config["OPTIMISTIC_RESET_RATIO"], config["NUM_ENVS"]),
         )
     else:
-        env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
 
     def linear_schedule(count):
@@ -514,7 +496,7 @@ if __name__ == "__main__":
         type=int,
         default=1024,
     )
-    parser.add_argument("--total_timesteps", type=int, default=1e9)
+    parser.add_argument("--total_timesteps", type=lambda x: int(float(x)), default=1e9)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--num_steps", type=int, default=64)
     parser.add_argument("--update_epochs", type=int, default=4)

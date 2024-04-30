@@ -7,6 +7,8 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+from craftax.craftax_env import make_craftax_env_from_name
+
 import wandb
 from typing import NamedTuple
 
@@ -50,32 +52,9 @@ def make_train(config):
         config["NUM_ENVS"] * config["NUM_STEPS"] // config["NUM_MINIBATCHES"]
     )
 
-    if config["ENV_NAME"] == "Craftax-Classic-Symbolic-v1":
-        from craftax.craftax_classic.envs.craftax_symbolic_env import (
-            CraftaxClassicSymbolicEnv,
-        )
-
-        env = CraftaxClassicSymbolicEnv()
-        is_symbolic = True
-    elif config["ENV_NAME"] == "Craftax-Classic-Pixels-v1":
-        from craftax.craftax_classic.envs.craftax_pixels_env import (
-            CraftaxClassicPixelsEnv,
-        )
-
-        env = CraftaxClassicPixelsEnv()
-        is_symbolic = False
-    elif config["ENV_NAME"] == "Craftax-Symbolic-v1":
-        from craftax.craftax.envs.craftax_symbolic_env import CraftaxSymbolicEnv
-
-        env = CraftaxSymbolicEnv()
-        is_symbolic = True
-    elif config["ENV_NAME"] == "Craftax-Pixels-v1":
-        from craftax.craftax.envs.craftax_pixels_env import CraftaxPixelsEnv
-
-        env = CraftaxPixelsEnv()
-        is_symbolic = False
-    else:
-        raise ValueError(f"Unknown env: {config['ENV_NAME']}")
+    env = make_craftax_env_from_name(
+        config["ENV_NAME"], not config["USE_OPTIMISTIC_RESETS"]
+    )
     env_params = env.default_params
 
     env = LogWrapper(env)
@@ -99,7 +78,7 @@ def make_train(config):
 
     def train(rng):
         # INIT NETWORK
-        if is_symbolic:
+        if "Symbolic" in config["ENV_NAME"]:
             network = ActorCriticRND(
                 env.action_space(env_params).n, config["LAYER_SIZE"]
             )
