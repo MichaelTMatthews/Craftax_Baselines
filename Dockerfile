@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/jax:23.10-py3
+FROM nvcr.io/nvidia/jax:24.04-py3
 
 ENV CUDA_PATH /usr/local/cuda
 ENV CUDA_INCLUDE_PATH /usr/local/cuda/include
