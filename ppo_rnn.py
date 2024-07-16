@@ -27,6 +27,7 @@ from wrappers import (
     LogWrapper,
     OptimisticResetVecEnvWrapper,
     BatchEnvWrapper,
+    AutoResetEnvWrapper,
 )
 from logz.batch_logging import create_log_dict, batch_log
 
@@ -153,6 +154,7 @@ def make_train(config):
             reset_ratio=min(config["OPTIMISTIC_RESET_RATIO"], config["NUM_ENVS"]),
         )
     else:
+        env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
 
     def linear_schedule(count):

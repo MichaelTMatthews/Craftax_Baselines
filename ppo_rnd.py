@@ -68,6 +68,7 @@ def make_train(config):
             reset_ratio=min(config["OPTIMISTIC_RESET_RATIO"], config["NUM_ENVS"]),
         )
     else:
+        env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
 
     def linear_schedule(count):

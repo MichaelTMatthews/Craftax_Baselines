@@ -30,6 +30,7 @@ from wrappers import (
     LogWrapper,
     OptimisticResetVecEnvWrapper,
     BatchEnvWrapper,
+    AutoResetEnvWrapper,
 )
 
 # Code adapted from the original implementation made by Chris Lu
@@ -70,6 +71,7 @@ def make_train(config):
             reset_ratio=min(config["OPTIMISTIC_RESET_RATIO"], config["NUM_ENVS"]),
         )
     else:
+        env = AutoResetEnvWrapper(env)
         env = BatchEnvWrapper(env, num_envs=config["NUM_ENVS"])
 
     def linear_schedule(count):
