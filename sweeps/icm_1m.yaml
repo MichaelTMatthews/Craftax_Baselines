@@ -31,3 +31,7 @@ parameters:
     values: [16, 32, 64, 128]
   seed:
     values: [0]
+  num_envs:
+    value: 256
+  num_steps:
+    value: 16
