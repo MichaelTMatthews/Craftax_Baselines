@@ -1,0 +1,33 @@
+program: ppo.py
+entity: michael-matthews
+project: CraftaxExperiments
+method: random
+metric:
+  goal: maximize
+  name: episode_return
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - ${args_no_boolean_flags}
+parameters:
+  env_name:
+    value: "Craftax-Symbolic-v1"
+  total_timesteps:
+    value: 1000000
+  train_icm:
+    value: true
+  icm_reward_coeff:
+    values: [0.01, 0.1, 0.5, 1.0, 10.0, 100.0]
+  icm_lr:
+    value: 0.0003
+  icm_forward_loss_coef:
+    values: [0.1, 0.5, 1.0]
+  icm_inverse_loss_coef:
+    values: [0.1, 0.5, 1.0]
+  icm_layer_size:
+    value: 256
+  icm_latent_size:
+    values: [16, 32, 64, 128]
+  seed:
+    values: [0]
