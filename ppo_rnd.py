@@ -270,7 +270,7 @@ def make_train(config):
                 )
 
             advantages_e, targets_e = _calculate_gae(traj_batch, last_val_e, True)
-            advantages_i, targets_i = _calculate_gae(traj_batch, last_val_e, False)
+            advantages_i, targets_i = _calculate_gae(traj_batch, last_val_i, False)
 
             # UPDATE NETWORK
             def _update_epoch(update_state, unused):
