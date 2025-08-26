@@ -12,7 +12,7 @@
 # "argparse",
 # "wandb",
 # "mlflow",
-# "orbax-checkpoint==0.5.0",
+# "orbax-checkpoint",
 # "pygame",
 # "gymnax",
 # "chex",
@@ -36,6 +36,7 @@ import jax
 import jax.numpy as jnp
 import mlflow
 import optax
+import orbax.checkpoint
 import yaml
 from craftax.craftax_env import make_craftax_env_from_name
 from flax import nnx
@@ -335,31 +336,6 @@ def make_run(config: dict[str, Any]) -> Callable:
 
             model, optim, _, _, _, _ = update_state
 
-            # start: logging
-
-            def logger_callback(log_info, batch_idx):
-                # Add NUM_REPEATS for batch logging compatibility
-                config["NUM_REPEATS"] = config["n_runs"]
-                config["DEBUG"] = True  # Add DEBUG flag for batch logging
-                config["NUM_STEPS"] = n_batch_steps  # Steps per batch, not total steps
-                config["NUM_ENVS"] = config["n_envs"]
-
-                to_log = create_log_dict(log_info, config)
-                batch_log(batch_idx, to_log, config)
-
-            log_info = jax.tree.map(
-                lambda x: (x * batch.info["returned_episode"]).sum() / batch.info["returned_episode"].sum(),
-                batch.info,
-            )
-
-            jax.debug.callback(
-                logger_callback,
-                log_info,
-                batch_idx,
-            )
-
-            # end: logging
-
             run_state = (
                 obs,
                 model,
@@ -368,7 +344,99 @@ def make_run(config: dict[str, Any]) -> Callable:
                 batch_idx + 1,
                 batch_key,
             )
-            return run_state, log_info
+
+            # region logging
+
+            def do_nothing():
+                return
+
+            def do_metrics():
+                def metrics_callback(metric_info, batch_idx):
+                    # Add NUM_REPEATS for batch logging compatibility
+                    config["NUM_REPEATS"] = config["n_runs"]
+                    config["DEBUG"] = True  # Add DEBUG flag for batch logging
+                    config["NUM_STEPS"] = n_batch_steps  # Steps per batch, not total steps
+                    config["NUM_ENVS"] = config["n_envs"]
+
+                    to_log = create_log_dict(metric_info, config)
+                    batch_log(batch_idx, to_log, config)
+
+                metric_info = jax.tree.map(
+                    lambda x: (x * batch.info["returned_episode"]).sum() / batch.info["returned_episode"].sum(),
+                    batch.info,
+                )
+                jax.debug.callback(
+                    metrics_callback,
+                    metric_info,
+                    batch_idx,
+                )
+
+            def do_checkpoint():
+                def checkpoint_callback(batch_idx, model_state):
+                    run_dir = Path(mlflow.get_artifact_uri().replace("file://", ""))
+                    ckpt_dir = run_dir / "checkpoints" / f"{batch_idx:06d}"
+                    checkpointer = orbax.checkpoint.StandardCheckpointer()
+                    checkpointer.save(ckpt_dir, model_state)
+
+                _, model_state = nnx.split(model)
+                jax.debug.callback(
+                    checkpoint_callback,
+                    batch_idx,
+                    model_state,
+                )
+
+            def do_snapshot():
+                def snapshot_callback(batch_idx, snapshot):
+                    run_dir = Path(mlflow.get_artifact_uri().replace("file://", ""))
+                    snapshot_dir = run_dir / "run_state_snapshots" / f"{batch_idx:06d}"
+                    checkpointer = orbax.checkpoint.StandardCheckpointer()
+                    checkpointer.save(snapshot_dir, snapshot)
+
+                _, model_state = nnx.split(model)
+                optim_state = nnx.state(optim)
+                snapshot = {
+                    "obs": obs,
+                    "model_state": model_state,
+                    "optim_state": optim_state,
+                    "env_state": env_state,
+                    "batch_idx": batch_idx,
+                    "batch_key": batch_key,
+                }
+                jax.debug.callback(
+                    snapshot_callback,
+                    batch_idx,
+                    snapshot,
+                )
+
+            jax.lax.cond(
+                jnp.logical_or(
+                    batch_idx % config.get("metrics_every", 1) == 0,
+                    batch_idx == n_batches - 1,
+                ),
+                do_metrics,
+                do_nothing,
+            )
+
+            jax.lax.cond(
+                jnp.logical_or(
+                    batch_idx % config.get("checkpoint_every", 10) == 0,
+                    batch_idx == n_batches - 1,
+                ),
+                do_checkpoint,
+                do_nothing,
+            )
+
+            jax.lax.cond(
+                jnp.logical_or(
+                    batch_idx % config.get("snapshot_every", jnp.inf) == 0,
+                    batch_idx == n_batches - 1,
+                ),
+                do_snapshot,
+                do_nothing,
+            )
+
+            # endregion
+            return run_state, _
 
         key, model_key, env_key, batch_key = jax.random.split(rng, 4)
 
@@ -402,12 +470,12 @@ def make_run(config: dict[str, Any]) -> Callable:
             batch_idx := 0,
             batch_key,
         )
-        run_state, log_info = nnx.scan(
+        run_state, _ = nnx.scan(
             batch_step,
             length=n_batches,
         )(run_state, None)
 
-        return run_state, log_info
+        return run_state, _
 
     env = make_craftax_env_from_name(
         config["env"]["id"],
@@ -472,4 +540,4 @@ if __name__ == "__main__":
     run = nnx.jit(run)
     run = nnx.vmap(run)
 
-    run_state, log_info = run(runs_keys)
+    run_state, _ = run(runs_keys)
