@@ -347,9 +347,6 @@ def make_run(config: dict[str, Any]) -> Callable:
 
             # region logging
 
-            def do_nothing():
-                return
-
             def do_metrics():
                 def metrics_callback(metric_info, batch_idx):
                     # Add NUM_REPEATS for batch logging compatibility
@@ -414,7 +411,7 @@ def make_run(config: dict[str, Any]) -> Callable:
                     batch_idx == n_batches - 1,
                 ),
                 do_metrics,
-                do_nothing,
+                lambda: None,
             )
 
             jax.lax.cond(
@@ -423,7 +420,7 @@ def make_run(config: dict[str, Any]) -> Callable:
                     batch_idx == n_batches - 1,
                 ),
                 do_checkpoint,
-                do_nothing,
+                lambda: None,
             )
 
             jax.lax.cond(
@@ -432,10 +429,11 @@ def make_run(config: dict[str, Any]) -> Callable:
                     batch_idx == n_batches - 1,
                 ),
                 do_snapshot,
-                do_nothing,
+                lambda: None,
             )
 
             # endregion
+
             return run_state, _
 
         key, model_key, env_key, batch_key = jax.random.split(rng, 4)
