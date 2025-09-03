@@ -1,0 +1,26 @@
+# experiment_name: ...
+seed: 42
+n_runs: 1
+n_envs: 2
+deterministic: true
+
+env:
+  id: "CartPole-v1"
+
+training:
+  n_steps: 500_000
+
+  buffer_size: 10_000
+  batch_size: 128
+
+  epsilon_initial: 1.0
+  epsilon_final: 0.05
+  epsilon_decay: 250_000
+
+  learning_start: 10_000
+  update_frequency: 10
+  target_update_frequency: 500
+
+  lr: !!float 2.5e-4
+  anneal_lr: true
+  gamma: 0.99
