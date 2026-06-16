@@ -122,13 +122,22 @@ class OptimisticResetVecEnvWrapper(GymnaxWrapper):
         rng, _rng = jax.random.split(rng)
         reset_indexes = jnp.arange(self.num_resets).repeat(self.reset_ratio)
 
-        being_reset = jax.random.choice(
+        being_reset_random = jax.random.choice(
             _rng,
             jnp.arange(self.num_envs),
             shape=(self.num_resets,),
             p=done,
             replace=False,
         )
+
+        being_reset_deterministic = jnp.argsort(done)[-self.num_resets :]
+
+        being_reset = jax.lax.select(
+            done.astype(jnp.int32).sum() < self.num_resets,
+            being_reset_deterministic,
+            being_reset_random,
+        )
+
         reset_indexes = reset_indexes.at[being_reset].set(jnp.arange(self.num_resets))
 
         obs_re = obs_re[reset_indexes]
