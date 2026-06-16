@@ -9,11 +9,6 @@ import optax
 import yaml
 from craftax.environment_base.wrappers import AutoResetEnvWrapper
 from flax.training.train_state import TrainState
-from orbax.checkpoint import (
-    PyTreeCheckpointer,
-    CheckpointManagerOptions,
-    CheckpointManager,
-)
 import orbax.checkpoint as ocp
 
 from models.actor_critic import ActorCriticConv, ActorCritic
@@ -31,10 +26,10 @@ def main(args):
 
     config["NUM_ENVS"] = 1
 
-    orbax_checkpointer = PyTreeCheckpointer()
-    options = CheckpointManagerOptions(max_to_keep=1, create=True)
-    checkpoint_manager = CheckpointManager(
-        os.path.join(args.path, "policies"), orbax_checkpointer, options
+    options = ocp.CheckpointManagerOptions(max_to_keep=1)
+    checkpoint_manager = ocp.CheckpointManager(
+        os.path.join(args.path, "policies"),
+        options=options
     )
 
     is_classic = False
@@ -93,8 +88,11 @@ def main(args):
         tx=tx,
     )
 
+    abstract_train_state = jax.eval_shape(lambda: train_state)
+
     train_state = checkpoint_manager.restore(
-        config["TOTAL_TIMESTEPS"], items=train_state
+        config["TOTAL_TIMESTEPS"],
+        args=ocp.args.StandardRestore(abstract_train_state)
     )
 
     obs, env_state = env.reset(key=__rng)

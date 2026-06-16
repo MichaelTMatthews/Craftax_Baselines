@@ -8,7 +8,7 @@ import distrax
 
 
 class ActorCriticConvSymbolicCraftax(nn.Module):
-    action_dim: Sequence[int]
+    action_dim: int
     map_obs_shape: Sequence[int]
     layer_width: int
 
@@ -81,7 +81,7 @@ class ActorCriticConvSymbolicCraftax(nn.Module):
 
 
 class ActorCriticConv(nn.Module):
-    action_dim: Sequence[int]
+    action_dim: int
     layer_width: int
     activation: str = "tanh"
 
@@ -127,7 +127,7 @@ class ActorCriticConv(nn.Module):
 
 
 class ActorCritic(nn.Module):
-    action_dim: Sequence[int]
+    action_dim: int
     layer_width: int
     activation: str = "tanh"
 
@@ -193,7 +193,7 @@ class ActorCritic(nn.Module):
 
 
 class ActorCriticWithEmbedding(nn.Module):
-    action_dim: Sequence[int]
+    action_dim: int
     layer_width: int
     activation: str = "tanh"
 

@@ -12,13 +12,8 @@ from craftax.craftax_env import make_craftax_env_from_name
 import wandb
 from typing import NamedTuple
 
-from flax.training import orbax_utils
 from flax.training.train_state import TrainState
-from orbax.checkpoint import (
-    PyTreeCheckpointer,
-    CheckpointManagerOptions,
-    CheckpointManager,
-)
+import orbax.checkpoint as ocp
 
 from logz.batch_logging import batch_log, create_log_dict
 from models.actor_critic import (
@@ -649,17 +644,17 @@ def run_ppo(config):
         def _save_network(rs_index, dir_name):
             train_states = out["runner_state"][rs_index]
             train_state = jax.tree.map(lambda x: x[0], train_states)
-            orbax_checkpointer = PyTreeCheckpointer()
-            options = CheckpointManagerOptions(max_to_keep=1, create=True)
+
             path = os.path.join(wandb.run.dir, dir_name)
-            checkpoint_manager = CheckpointManager(path, orbax_checkpointer, options)
+            options = ocp.CheckpointManagerOptions(max_to_keep=1)
+
+            with ocp.CheckpointManager(path, options=options) as checkpoint_manager:
+                checkpoint_manager.save(
+                    int(config["TOTAL_TIMESTEPS"]),
+                    args=ocp.args.StandardSave(train_state)
+                )
+
             print(f"saved runner state to {path}")
-            save_args = orbax_utils.save_args_from_target(train_state)
-            checkpoint_manager.save(
-                config["TOTAL_TIMESTEPS"],
-                train_state,
-                save_kwargs={"save_args": save_args},
-            )
 
         if config["SAVE_POLICY"]:
             _save_network(0, "policies")

@@ -2,7 +2,6 @@ import jax.numpy as jnp
 import flax.linen as nn
 import numpy as np
 from flax.linen.initializers import constant, orthogonal
-from typing import Sequence
 
 import distrax
 
@@ -29,7 +28,7 @@ class RNDNetwork(nn.Module):
 
 
 class ActorCriticRND(nn.Module):
-    action_dim: Sequence[int]
+    action_dim: int
     layer_width: int
     activation: str = "tanh"
 
